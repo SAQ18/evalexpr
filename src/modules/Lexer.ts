@@ -1,4 +1,5 @@
 import { Token, TokenType } from "../core/types";
+import { Evaluator } from "./Evaluator";
 import { ExpressionError } from "./ExpressionError";
 
 class Lexer {
@@ -63,12 +64,17 @@ class Lexer {
   private readNumber(): string {
     let value = "";
     let hasDot = false;
+    let hasMinus = false;
 
     while (
       this.current &&
-      (/\d/.test(this.current) || (this.current === "." && !hasDot))
+      (/\d/.test(this.current) ||
+        (this.current === "." && !hasDot) ||
+        (this.current === "-" && !hasMinus && value === ""))
     ) {
       if (this.current === ".") hasDot = true;
+      if (this.current === "-") hasMinus = true;
+
       value += this.current;
       this.advance();
     }
@@ -240,7 +246,9 @@ class Lexer {
 
       if (
         this.current === "+" ||
-        this.current === "-" ||
+        // ensure '-' is treated as operator, not part of a number e.g. negative numbers
+        // e.g., in "5 - 3" vs "5 -3"
+        (this.current === "-" && !/\d/.test(this.peek())) ||
         this.current === "*" ||
         this.current === "/" ||
         this.current === "%"
@@ -255,7 +263,10 @@ class Lexer {
       }
 
       // Numbers
-      if (/\d/.test(this.current)) {
+      if (
+        /\d/.test(this.current) ||
+        (this.current === "-" && /\d/.test(this.peek()))
+      ) {
         tokens.push({
           type: TokenType.NUMBER,
           value: this.readNumber(),
@@ -281,6 +292,12 @@ class Lexer {
             position: startPos,
           });
         } else if (identifier === "contains") {
+          tokens.push({
+            type: TokenType.FUNCTION,
+            value: identifier,
+            position: startPos,
+          });
+        } else if (Evaluator.getRegisteredFunctions().includes(identifier)) {
           tokens.push({
             type: TokenType.FUNCTION,
             value: identifier,

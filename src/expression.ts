@@ -1,5 +1,3 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
-
 import { Evaluator } from "./modules/Evaluator";
 import { ExpressionError } from "./modules/ExpressionError";
 import { Lexer } from "./modules/Lexer";

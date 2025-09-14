@@ -1,7 +1,10 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
+export {
+  type GenericValue,
+  type Primitive,
+  type EvaluationContext,
+} from "./core/types";
 
-import { evaluate, evaluateBoolean } from "./expression";
-import { ExpressionError } from "./modules/ExpressionError";
+export { Evaluator } from "./modules/Evaluator";
+export { ExpressionError } from "./modules/ExpressionError";
 
-// Export the error class and Evaluator for external error handling and function registration
-export { ExpressionError, evaluateBoolean, evaluate };
+export { evaluateBoolean, evaluate } from "./expression";

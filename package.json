@@ -1,6 +1,6 @@
 {
   "name": "evalexpr",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "A secure TypeScript expression evaluator for dynamic form validation and conditional logic with support for context variables, form fields, and custom functions",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",

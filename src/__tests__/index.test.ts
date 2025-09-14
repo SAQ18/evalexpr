@@ -215,4 +215,41 @@ describe("evaluate", () => {
     expect(evaluate("($count % 2)", context)).toBe(0);
     expect(evaluate("$count * 5", context)).toBe(50);
   });
+
+  it("should handle negative numbers correctly", () => {
+    const context = { form: {}, context: {} };
+    expect(evaluate("-5 + 3", context)).toBe(-2);
+    expect(evaluate("10 + -2", context)).toBe(8);
+    expect(evaluate("-3 * -2", context)).toBe(6);
+    expect(evaluate("(-4) / 2", context)).toBe(-2);
+  });
+
+  it("should handle nested properties in context", () => {
+    const context = {
+      form: {
+        user: { name: "bob" },
+        dob: { year: 1990 },
+      },
+      context: {
+        user: {
+          details: {
+            age: 28,
+            name: "Bob",
+            address: { line1: "35 enfield drive" },
+          },
+        },
+      },
+    };
+
+    expect(evaluate("@user.details.age + 2", context)).toBe(30);
+    expect(evaluate("@user.details.name + ' Smith'", context)).toBe(
+      "Bob Smith"
+    );
+    expect(evaluate("@user.details.address.line1", context)).toBe(
+      "35 enfield drive"
+    );
+
+    expect(evaluate("$user.name + ' Smith'", context)).toBe("bob Smith");
+    expect(evaluate("$dob.year + 10", context)).toBe(2000);
+  });
 });

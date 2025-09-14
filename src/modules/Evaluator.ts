@@ -50,7 +50,16 @@ class Evaluator {
     name: string,
     func: (args: any[]) => any
   ): void {
+    if (Evaluator.functionRegistry[name]) {
+      throw new ExpressionError(
+        `Function with name "${name}" is already registered`
+      );
+    }
     Evaluator.functionRegistry[name] = func;
+  }
+
+  public static getRegisteredFunctions(): Array<string> {
+    return Object.keys(Evaluator.functionRegistry);
   }
 
   private evaluateFunctionFromRegistry(name: string, args: any[]): any {

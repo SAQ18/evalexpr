@@ -1,12 +1,15 @@
 export type Primitive = string | number | boolean | null;
 
-export type GenericValue = Record<
-  string,
-  Primitive | Record<string, Primitive> | Array<Primitive>
->;
+export interface GenericValue {
+  [key: string]:
+    | Primitive
+    | Array<Primitive>
+    | Array<GenericValue>
+    | GenericValue;
+}
 
 export interface EvaluationContext {
-  form: Record<string, Primitive | Array<Primitive>>;
+  form: GenericValue;
   context: GenericValue;
 }
 
