@@ -12,7 +12,10 @@
     }
   },
   "files": [
-    "dist/**/*.(js|mjs|cjs|d.ts)",
+    "dist/**/*.js",
+    "dist/**/*.d.ts",
+    "dist/**/*.mjs",
+    "dist/**/*.cjs",
     "README.md",
     "LICENSE"
   ],
