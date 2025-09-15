@@ -20,8 +20,12 @@ describe("evaluateBoolean", () => {
       context: {},
     };
 
-    expect(evaluateBoolean("$undefinedVar > 18", context)).toBe(false);
-    expect(evaluateBoolean("@undefinedContext == true", context)).toBe(false);
+    expect(() => evaluateBoolean("$undefinedVar > 18", context)).toThrow(
+      "Undefined variable: undefinedVar"
+    );
+    expect(() => evaluateBoolean("@undefinedContext == true", context)).toThrow(
+      "Undefined variable: undefinedContext"
+    );
   });
 
   it("should evaluate complex expressions", () => {
@@ -121,6 +125,17 @@ describe("evaluateBoolean - Error Handling", () => {
       "Expression must be a non-empty string"
     );
   });
+
+  it("should throw an error for expressions that do not evaluate to boolean", () => {
+    const context = {
+      form: { age: 25 },
+      context: {},
+    };
+
+    expect(() => evaluateBoolean("$age + 5", context)).toThrow(
+      "Expression did not evaluate to a boolean"
+    );
+  });
 });
 
 describe("evaluateBoolean - Edge Cases", () => {
@@ -143,6 +158,17 @@ describe("evaluateBoolean - Edge Cases", () => {
     expect(evaluateBoolean("$greeting == 'Hello, World!'", context)).toBe(true);
     expect(evaluateBoolean("$greeting == 'Hello, \\'World!\\''", context)).toBe(
       false
+    );
+  });
+
+  it("should handle $field < 20 when form context is missing the field", () => {
+    const context = {
+      form: { name: "John" },
+      context: {},
+    };
+
+    expect(() => evaluateBoolean("$age < 20", context)).toThrow(
+      "Undefined variable: age"
     );
   });
 });
@@ -251,5 +277,73 @@ describe("evaluate", () => {
 
     expect(evaluate("$user.name + ' Smith'", context)).toBe("bob Smith");
     expect(evaluate("$dob.year + 10", context)).toBe(2000);
+  });
+
+  it("should handle special characters in strings", () => {
+    const context = {
+      form: { greeting: "Hello, World!", quote: "He said, 'Hello!'" },
+      context: {},
+    };
+
+    expect(evaluate("$greeting", context)).toBe("Hello, World!");
+    expect(evaluate("$greeting == 'Hello, World!'", context)).toBe(true);
+    expect(evaluate("$greeting == 'Hello, \\'World!\\''", context)).toBe(false);
+    expect(evaluate("$quote == 'He said, \\'Hello!\\''", context)).toBe(true);
+  });
+
+  it("should handle excessive whitespace in expressions", () => {
+    const context = {
+      form: { age: 25, name: "John" },
+      context: {},
+    };
+
+    expect(evaluate("   $age    +    5   ", context)).toBe(30);
+    expect(evaluate("   $name   +   ' Doe'   ", context)).toBe("John Doe");
+    expect(evaluate("   $age    >    18   ", context)).toBe(true);
+  });
+
+  it("should handle $field < 20 when form context is missing the field", () => {
+    const context = {
+      form: { name: "John" },
+      context: {},
+    };
+
+    expect(() => evaluate("$age < 20", context)).toThrow(
+      "Undefined variable: age"
+    );
+  });
+
+  it("should handle deeply nested properties", () => {
+    const context = {
+      form: {
+        level1: {
+          level2: {
+            level3: {
+              value: 42,
+            },
+          },
+        },
+      },
+      context: {},
+    };
+
+    expect(evaluate("$level1.level2.level3.value", context)).toBe(42);
+    expect(evaluate("$level1.level2.level3.value + 8", context)).toBe(50);
+    expect(evaluate("$level1.level2.level3.value > 40", context)).toBe(true);
+  });
+
+  it("should handle missing nested properties gracefully", () => {
+    const context = {
+      form: {
+        level1: {
+          level2: {},
+        },
+      },
+      context: {},
+    };
+
+    expect(evaluate("$level1.level2.level3.value", context)).toBeNull();
+    expect(evaluate("$level1.level2.level3.value + 8", context)).toBeNaN();
+    expect(evaluate("$level1.level2.level3.value > 40", context)).toBe(false);
   });
 });

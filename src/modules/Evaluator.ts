@@ -1,5 +1,5 @@
 import { ExpressionError } from "../index";
-import { EvaluationContext } from "../core/types";
+import { EvaluationContext, Primitive } from "../core/types";
 
 class Evaluator {
   private context: EvaluationContext;
@@ -8,7 +8,10 @@ class Evaluator {
     this.context = context;
   }
 
-  private getNestedValue(obj: any, path: string): any {
+  private getNestedValue(
+    obj: any,
+    path: string
+  ): Primitive | Primitive[] | null {
     const parts = path.split(".");
     let current = obj;
 
@@ -23,6 +26,10 @@ class Evaluator {
       } else {
         return null;
       }
+    }
+
+    if (current === undefined) {
+      throw new ExpressionError(`Undefined variable: ${path}`);
     }
 
     return current;
@@ -75,18 +82,11 @@ class Evaluator {
       case "literal":
         return node.value;
 
-      case "form_var": {
-        const formValue = this.getNestedValue(this.context.form, node.name);
-        return formValue !== undefined ? formValue : null;
-      }
+      case "form_var":
+        return this.getNestedValue(this.context.form, node.name);
 
-      case "context_var": {
-        const contextValue = this.getNestedValue(
-          this.context.context,
-          node.name
-        );
-        return contextValue !== undefined ? contextValue : null;
-      }
+      case "context_var":
+        return this.getNestedValue(this.context.context, node.name);
 
       case "binary": {
         const left = this.evaluate(node.left);
@@ -98,7 +98,7 @@ class Evaluator {
           case "!=":
             return left !== right;
           case "+":
-            return (left as any) + (right as any);
+            return this.add(left, right);
           case "-":
             return Number(left) - Number(right);
           case "*":
@@ -110,14 +110,22 @@ class Evaluator {
             return Number(left) / Number(right);
           case "%":
             return Number(left) % Number(right);
-          case "<":
+          case "<": {
+            if (left == null || right == null) return false;
             return Number(left) < Number(right);
-          case ">":
+          }
+          case ">": {
+            if (left == null || right == null) return false;
             return Number(left) > Number(right);
-          case "<=":
+          }
+          case "<=": {
+            if (left == null || right == null) return false;
             return Number(left) <= Number(right);
-          case ">=":
+          }
+          case ">=": {
+            if (left == null || right == null) return false;
             return Number(left) >= Number(right);
+          }
           case "&&":
             return Boolean(left) && Boolean(right);
           case "||":
@@ -135,6 +143,38 @@ class Evaluator {
       default:
         throw new ExpressionError(`Unknown node type: ${node.type}`);
     }
+  }
+
+  private add(left: any, right: any): number | string {
+    // If either operand is null and the other is a number, return NaN
+    if (
+      (left === null && typeof right === "number") ||
+      (typeof left === "number" && right === null)
+    ) {
+      return NaN;
+    }
+
+    // Handle string concatenation - if either operand is a string, concatenate
+    if (typeof left === "string" || typeof right === "string") {
+      return String(left) + String(right);
+    }
+
+    // Handle numeric addition (both are numbers)
+    if (typeof left === "number" && typeof right === "number") {
+      // Handle NaN cases
+      if (Number.isNaN(left) || Number.isNaN(right)) {
+        return NaN;
+      }
+
+      // Handle infinity edge cases
+      if (left === Infinity && right === -Infinity) return NaN;
+      if (left === -Infinity && right === Infinity) return NaN;
+
+      return left + right;
+    }
+
+    // Default JavaScript addition for everything else
+    return (left as any) + (right as any);
   }
 }
 

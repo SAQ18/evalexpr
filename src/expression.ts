@@ -35,7 +35,13 @@ const evaluate = (expression: string, context: EvaluationContext) => {
 const evaluateBoolean = (
   expression: string,
   context: EvaluationContext
-): boolean => Boolean(evaluate(expression, context));
+): boolean => {
+  const result = evaluate(expression, context);
+  if (typeof result !== "boolean") {
+    throw new ExpressionError("Expression did not evaluate to a boolean");
+  }
+  return result;
+};
 
 // Export the error class and Evaluator for external error handling and function registration
 export { evaluateBoolean, evaluate };
