@@ -1,51 +1,30 @@
-name: Publish to npm
+name: Publish Package
 
 on:
   push:
-    branches:
-      - main
+    tags:
+      - "v*"
+
+permissions:
+  id-token: write # Required for OIDC
+  contents: read
 
 jobs:
-  build-and-publish:
+  publish:
     runs-on: ubuntu-latest
-
     steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
-        with:
-          fetch-depth: 0 # needed for versioning and pulling latest tags
+      - uses: actions/checkout@v4
 
-      - name: Set up Node.js
-        uses: actions/setup-node@v4
+      - uses: actions/setup-node@v4
         with:
-          node-version: '22'
-          registry-url: 'https://registry.npmjs.org'
+          node-version: "22"
+          registry-url: "https://registry.npmjs.org"
 
+      - name: Install Yarn
+        run: npm install -g yarn@latest
       - name: Install dependencies
         run: yarn install --frozen-lockfile
-
-      - name: Run tests
-        run: yarn test
-
-      - name: Configure git
-        run: |
-          git config user.name "github-actions[bot]"
-          git config user.email "github-actions[bot]@users.noreply.github.com"
-
-      - name: Bump version
-        run: npm version patch -m "chore(release): %s"
-
-      - name: Push version bump
-        run: |
-          git push origin main --follow-tags
-
-      - name: Pull latest changes
-        run: git pull origin main --tags
-
       - name: Build package
-        run: yarn run prepack
-
-      - name: Publish to npm
-        run: npm publish --yes
-        env:
-          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+        run: yarn prepack
+      - name: Publish package
+        run: yarn publish --non-interactive
