@@ -1,6 +1,6 @@
 {
   "name": "evalexpr",
-  "version": "1.0.6",
+  "version": "1.0.7",
   "description": "A secure TypeScript expression evaluator for dynamic form validation and conditional logic with support for context variables, form fields, and custom functions",
   "main": "dist/cjs/index.js",
   "module": "dist/esm/index.mjs",
